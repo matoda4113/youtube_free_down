@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:you_free_down/down_test_screen.dart';
+import 'package:you_free_down/youtube_down_screen.dart';
 
+import 'global/global.dart';
 import 'main.dart';
 
 ///MainPage
@@ -24,8 +25,8 @@ class _MainPageState extends State<MainPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("MainPage"),),
-      body: DownTestScreen(),
+      appBar: AppBar(title: Text("유튜브 다운"),),
+      body: YoutubeDownScreen(),
     );
   }
 }

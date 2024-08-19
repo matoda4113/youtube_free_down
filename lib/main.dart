@@ -18,7 +18,7 @@ void main() async{
   Size size = await DesktopWindow.getWindowSize();
   logger.i(size);
 
-  await DesktopWindow.setMinWindowSize(Size(400,600));
+  await DesktopWindow.setMinWindowSize(Size(700,600));
   await DesktopWindow.setWindowSize(Size(size.width,size.height));
   runApp(const MyApp());
 }

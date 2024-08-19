@@ -90,7 +90,7 @@ class DataController extends GetxController {
   }
 
   //일반 다운로드 ( 혼합비디오 , 오디오 , 비디오온리, 오디오온리 )
-  Future<String> downloadCommon({required String title,required StreamInfo streamInfo, required String type}) async {
+  Future<String> downloadCommon({required String title,required StreamInfo streamInfo, required String type , required String mediaKey}) async {
 
     //제목공백제거
     String t1 = title.replaceAll(RegExp(r'\s+'), '');
@@ -109,8 +109,8 @@ class DataController extends GetxController {
         var totalBytes = streamInfo.size.totalBytes;
         num receivedBytes = 0;
         // 초기 진행률 설정
-        downloadProgressMap[title+streamInfo.container.name+streamInfo.size.totalMegaBytes.toString()+type] = 0.0;
-        downloadingNow[title+streamInfo.container.name+streamInfo.size.totalMegaBytes.toString()+type] = true;
+        downloadProgressMap[mediaKey] = 0.0;
+        downloadingNow[mediaKey] = true;
 
         stream.listen(
               (data) {
@@ -118,20 +118,20 @@ class DataController extends GetxController {
             fileStream.add(data);
             receivedBytes += data.length;
             //진행률 업데이트
-            downloadProgressMap[title+streamInfo.container.name+streamInfo.size.totalMegaBytes.toString()+type] = receivedBytes / totalBytes;
+            downloadProgressMap[mediaKey] = receivedBytes / totalBytes;
 
           }, onDone: () async {
             await fileStream.flush();
             await fileStream.close();
             // // 다운로드 완료시 진행률 1.0으로 설정
-            downloadProgressMap[title+streamInfo.container.name+streamInfo.size.totalMegaBytes.toString()+type] = 1.0;
-            downloadingNow[title+streamInfo.container.name+streamInfo.size.totalMegaBytes.toString()+type] = false;
+            downloadProgressMap[mediaKey] = 1.0;
+            downloadingNow[mediaKey] = false;
             completer.complete(mediaFilePath);
           },
           onError: (e) {
             logger.e('Error: $e');
-            downloadProgressMap.remove(title+streamInfo.container.name+streamInfo.size.totalMegaBytes.toString()+type);  // 에러 발생 시 항목 제거
-            downloadingNow[title+streamInfo.container.name+streamInfo.size.totalMegaBytes.toString()+type] = false;
+            downloadProgressMap.remove(mediaKey);  // 에러 발생 시 항목 제거
+            downloadingNow[mediaKey] = false;
             completer.completeError(e);
           },
           cancelOnError: true,
@@ -148,7 +148,7 @@ class DataController extends GetxController {
 
 
 
-  Future<String> downloadMerge({required String title,required StreamInfo streamInfoVideo,required StreamInfo streamInfoAudio}) async {
+  Future<String> downloadMerge({required String title,required StreamInfo streamInfoVideo,required StreamInfo streamInfoAudio , required String mediaKeyVideo , required String mediaKeyAudio}) async {
 
 
 
@@ -164,7 +164,7 @@ class DataController extends GetxController {
       // Completer 생성
       Completer<void> videoCompleter = Completer<void>();
       Completer<void> audioCompleter = Completer<void>();
-      downloadingNow[title+streamInfoVideo.container.name+streamInfoVideo.size.totalMegaBytes.toString()+"mix"] = true;
+      downloadingNow[mediaKeyVideo+"mix"] = true;
       //////비디오
       if (streamInfoVideo != null) {
 
@@ -174,28 +174,27 @@ class DataController extends GetxController {
         var totalBytes = streamInfoVideo.size.totalBytes;
         num receivedBytes = 0;
         // 초기 진행률 설정
-        mergeProgressMap[title+streamInfoVideo.container.name+streamInfoVideo.size.totalMegaBytes.toString()+"videoonly"] = 0.0;
+        mergeProgressMap[mediaKeyVideo] = 0.0;
 
         stream.listen(
               (data) {
             fileStream.add(data);
             receivedBytes += data.length;
             // 진행률 업데이트
-            mergeProgressMap[title+streamInfoVideo.container.name+streamInfoVideo.size.totalMegaBytes.toString()+"videoonly"] = receivedBytes / totalBytes;
+            mergeProgressMap[mediaKeyVideo] = receivedBytes / totalBytes;
           },
           onDone: () async {
 
-            logger.w("비디오시작");
             await fileStream.flush();
             await fileStream.close();
-            logger.w("비디오완료");
+
             // 다운로드 완료시 진행률 1.0으로 설정
-            mergeProgressMap[title+streamInfoVideo.container.name+streamInfoVideo.size.totalMegaBytes.toString()+"videoonly"] = 1.0;
+            mergeProgressMap[mediaKeyVideo] = 1.0;
             videoCompleter.complete();
           },
           onError: (e) {
             logger.e('Error: $e');
-            mergeProgressMap.remove(title+streamInfoVideo.container.name+streamInfoVideo.size.totalMegaBytes.toString()+"videoonly");  // 에러 발생 시 항목 제거
+            mergeProgressMap.remove(mediaKeyVideo);  // 에러 발생 시 항목 제거
             videoCompleter.completeError(e);
           },
           cancelOnError: true,
@@ -209,26 +208,24 @@ class DataController extends GetxController {
         var totalBytes = streamInfoVideo.size.totalBytes;
         num receivedBytes = 0;
         // 초기 진행률 설정
-        mergeProgressMap[title+streamInfoAudio.container.name+streamInfoAudio.size.totalMegaBytes.toString()+"audioonly"] = 0.0;
+        mergeProgressMap[mediaKeyAudio] = 0.0;
         stream.listen(
               (data) {
             fileStream.add(data);
             receivedBytes += data.length;
             // 진행률 업데이트
-            mergeProgressMap[title+streamInfoAudio.container.name+streamInfoAudio.size.totalMegaBytes.toString()+"audioonly"] = receivedBytes / totalBytes;
+            mergeProgressMap[mediaKeyAudio] = receivedBytes / totalBytes;
           },
           onDone: () async {
-            logger.w("오디오시작");
             await fileStream.flush();
             await fileStream.close();
             // 다운로드 완료시 진행률 1.0으로 설정
-            logger.w("오디오완료");
-            mergeProgressMap[title+streamInfoAudio.container.name+streamInfoAudio.size.totalMegaBytes.toString()+"audioonly"] = 1.0;
+            mergeProgressMap[mediaKeyAudio] = 1.0;
             audioCompleter.complete();
           },
           onError: (e) {
             logger.e('Error: $e');
-            downloadProgressMap.remove(title+streamInfoAudio.container.name+streamInfoAudio.size.totalMegaBytes.toString()+"audioonly");  // 에러 발생 시 항목 제거
+            downloadProgressMap.remove(mediaKeyAudio);  // 에러 발생 시 항목 제거
             audioCompleter.completeError(e);
           },
           cancelOnError: true,
@@ -243,7 +240,7 @@ class DataController extends GetxController {
 
       double totalDurationSeconds = await getVideoDuration(videoFilePathTmp)??1000000.0;
       // 초기 진행률 설정
-      downloadProgressMap[title+streamInfoVideo.container.name+streamInfoVideo.size.totalMegaBytes.toString()+"mix"] = 0.0;
+      downloadProgressMap[mediaKeyVideo+"mix"] = 0.0;
       // 로그 콜백 설정
       FFmpegKitConfig.enableLogCallback((log) async{
         String logMessage = log.getMessage();
@@ -254,9 +251,7 @@ class DataController extends GetxController {
           double currentTimeSeconds = _convertTimeToSeconds(timeString);
           // 진행률 계산
           double progress = currentTimeSeconds / totalDurationSeconds;
-          mergeProgressMap[title+streamInfoVideo.container.name+streamInfoVideo.size.totalMegaBytes.toString()+"mix"] = progress;
-
-          // logger.e(progress);
+          mergeProgressMap[mediaKeyVideo+"mix"] = progress;
         }
       });
 
@@ -264,11 +259,11 @@ class DataController extends GetxController {
       final returnCode = await session.getReturnCode();
 
       if (ReturnCode.isSuccess(returnCode)) {
-        mergeProgressMap[title+streamInfoVideo.container.name+streamInfoVideo.size.totalMegaBytes.toString()+"mix"] = 1.0;
+        mergeProgressMap[mediaKeyVideo+"mix"] = 1.0;
       } else {
         throw Exception("merge실패");
       }
-      downloadingNow[title+streamInfoVideo.container.name+streamInfoVideo.size.totalMegaBytes.toString()+"mix"] = false;
+      downloadingNow[mediaKeyVideo+"mix"] = false;
       return mergeFilePath;
     }catch(e){
       throw Exception(e);
@@ -289,6 +284,14 @@ class DataController extends GetxController {
     });
   }
 
+  void openRootDir() async{
+
+    Process.run('open', ["${appDocumentsDir!.path}"]).then((ProcessResult results) {
+    }).catchError((e) {
+      logger.e('Error: $e');
+    });
+  }
+
 
   // 로그에서 추출한 시간을 초 단위로 변환
   double _convertTimeToSeconds(String timeString) {
@@ -299,12 +302,6 @@ class DataController extends GetxController {
     return hours * 3600 + minutes * 60 + seconds;
   }
 
-// 비디오의 총 길이를 가져오는 함수
-  Future<double> _getTotalDuration(String videoFilePath) async {
-    // FFprobe 등을 사용해 비디오의 총 시간을 구하는 로직 필요
-    // 여기에서는 가정으로 대략 120초로 설정
-    return 120.0; // 실제로는 FFprobe를 사용해 비디오의 길이를 얻을 수 있음
-  }
 
   Future<double?> getVideoDuration(String videoFilePath) async {
     // FFprobe로 비디오의 메타데이터를 분석

@@ -24,6 +24,7 @@ const appColorGray8 = Color(0xFFE1E1E1);
 const appColorRed1 = Color(0xFFFF0000);
 const appColorRed2 = Color(0xFFDC6568);
 
+String appName = "SaranVideo";
 
 ///SharedPreferences
 late SharedPreferences prefs;

@@ -45,6 +45,8 @@ dependencies:
   simple_circular_progress_bar: ^1.0.2
   ffmpeg_kit_flutter: ^6.0.3
   desktop_window: ^0.4.0
+  icons_plus: ^5.0.0
+  extended_image: ^8.1.1 #외부 이미지 표현
 
 #  http: ^1.2.1
 #  flutter_ffmpeg: ^0.4.2

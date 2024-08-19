@@ -1,14 +1,18 @@
 import 'package:extended_image/extended_image.dart';
+import 'package:flick_video_player/flick_video_player.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:icons_plus/icons_plus.dart';
 import 'package:intl/intl.dart';
+import 'package:video_player/video_player.dart';
+
 
 import '../component/custom_input_filed.dart';
 import '../controller/data_controller.dart';
 import '../global/global.dart';
 import '../vo/youtube_video_info_vo.dart';
+import 'caption_detail_page.dart';
 
 ///YoutubeScreen
 ///담당자 : ---
@@ -30,6 +34,7 @@ class _YoutubeScreenState extends State<YoutubeScreen>  with AutomaticKeepAliveC
   void initState() {
     super.initState();
     logger.i("YoutubeScreen");
+
   }
 
   bool searchNow = false;
@@ -40,13 +45,17 @@ class _YoutubeScreenState extends State<YoutubeScreen>  with AutomaticKeepAliveC
   DataController _dataController = Get.find<DataController>();
   int _currentIndex = 0;
   PageController _pageController = PageController(initialPage: 0);
-  
+
+  FlickManager? flickManager;
+
+
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: EdgeInsets.all(10),
       child: Column(
         children: [
+
           Row(
             children: [
               Brand(Brands.youtube),
@@ -78,12 +87,22 @@ class _YoutubeScreenState extends State<YoutubeScreen>  with AutomaticKeepAliveC
 
                   setState(() {
                     searchNow = true;
+                    if(flickManager !=null){
+                      flickManager!.dispose();
+                    }
+
                   });
                   try{
                     video =  await _dataController.getYoutubeInfo(videoUrl!);
                     setState(() {
                       searchNow = false;
+                      flickManager = FlickManager(
+                        autoPlay: false,
+                          videoPlayerController:VideoPlayerController.networkUrl(Uri.parse(video?.mixList.first.url.toString()??"")
+                          ));
                     });
+
+
                   }catch(e){
                     setState(() {
                       video = null;
@@ -96,6 +115,7 @@ class _YoutubeScreenState extends State<YoutubeScreen>  with AutomaticKeepAliveC
             ],
           ),
           SizedBox(height: 10,),
+
           Expanded(
               child:searchNow
                   ?Center(child: CircularProgressIndicator())
@@ -109,16 +129,24 @@ class _YoutubeScreenState extends State<YoutubeScreen>  with AutomaticKeepAliveC
                       child: Column(
                        crossAxisAlignment: CrossAxisAlignment.start ,
                         children: [
-                          ExtendedImage.network(
-                            video?.video?.thumbnails.highResUrl??"",
-                            fit: BoxFit.contain,
-                            cache: true,
-                            loadStateChanged: (ExtendedImageState state) {
-                              if (state.extendedImageLoadState == LoadState.failed) {
-                                return Text("NoImage");
-                              }
-                            },
-                          ),
+                          if(flickManager!=null)
+                            AspectRatio(
+                              aspectRatio: 16 / 9, // 16:9 비율로 설정
+                              child: Container(
+                                color: Colors.black,
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    FlickVideoPlayer(
+                                      flickManager: flickManager!,
+                                      // flickVideoWithControlsFullscreen: SizedBox(),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          if(videoUrl!=null && videoUrl !="")
+
                           SizedBox(width: 20,),
                           Expanded(
                             flex: 1,
@@ -142,7 +170,7 @@ class _YoutubeScreenState extends State<YoutubeScreen>  with AutomaticKeepAliveC
                                       String title = "${video!.video!.title}_${video!.mixList![index].qualityLabel}";
                                       String mediaType = "commonMix";
                                       String mediaKey = title+"${video!.mixList![index].container.name}"+"${video!.mixList[index].size.totalMegaBytes}"+mediaType;
-                                      String spec = "(${video!.mixList![index].qualityLabel},${video!.mixList![index].container.name},${video!.mixList![index].size.totalMegaBytes.toStringAsFixed(2)}MB)";
+                                      String spec = "(${video!.mixList![index].qualityLabel},${video!.mixList![index].container.name})";
 
                               
                                       return Column(
@@ -202,24 +230,38 @@ class _YoutubeScreenState extends State<YoutubeScreen>  with AutomaticKeepAliveC
                                       );
                                     },
                                   ),
+                                  SizedBox(height: 5,),
                                   Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: [
-                                      Text("캡션복사"),
-                                      SizedBox(width: 10,),
+
+                                      Row(
+                                        children: [
+                                          Text("캡션복사"),
+                                          SizedBox(width: 10,),
+                                          GestureDetector(
+                                              onTap: (){
+                                                if(video?.caption != null){
+                                                  Clipboard.setData(ClipboardData(text: video!.caption!));
+                                                  // 복사 완료 알림
+                                                  ScaffoldMessenger.of(context).showSnackBar(
+                                                    SnackBar(content: Text("클립보드에 복사완료")),
+                                                  );
+                                                }
+
+                                              },
+                                              child: Icon(Icons.copy,size: 15,)),
+                                        ],
+                                      ),
+
                                       GestureDetector(
                                           onTap: (){
-                                            if(video?.caption != null){
-                                              Clipboard.setData(ClipboardData(text: video!.caption!));
-                                              // 복사 완료 알림
-                                              ScaffoldMessenger.of(context).showSnackBar(
-                                                SnackBar(content: Text("클립보드에 복사완료")),
-                                              );
-                                            }
-                              
+                                            Get.to(()=>CaptionDetailPage());
                                           },
-                                          child: Icon(Icons.copy,size: 15,)),
+                                          child: Text("..캡션더보기")),
                                     ],
                                   ),
+                                  SizedBox(height: 5,),
                                   CustomInputFiled(
 
                                     fillColor: appColorGray8,
@@ -332,7 +374,7 @@ class _YoutubeScreenState extends State<YoutubeScreen>  with AutomaticKeepAliveC
                                         String title = "${video!.video!.title}_${video!.videoOnlyList![index].qualityLabel}";
                                         String mediaKeyVideo = title+"${video!.videoOnlyList![index].container.name}"+"${video!.videoOnlyList[index].size.totalMegaBytes}+videoOnly";
                                         String mediaKeyAudio = title+"${video!.videoOnlyList![index].container.name}"+"${video!.videoOnlyList[index].size.totalMegaBytes}+audioOnly";
-                                        String spec = "(${video!.videoOnlyList[index].qualityLabel},${video!.videoOnlyList[index].container.name},${video!.videoOnlyList[index].size.totalMegaBytes.toStringAsFixed(2)}MB+a)";
+                                        String spec = "(${video!.videoOnlyList[index].qualityLabel},${video!.videoOnlyList[index].container.name})";
 
                                         return video!.videoOnlyList[index].container.name=="mp4"?Row(
                                           children: [
@@ -454,7 +496,7 @@ class _YoutubeScreenState extends State<YoutubeScreen>  with AutomaticKeepAliveC
                                         String title = "${video!.video!.title}_${video!.videoOnlyList![index].qualityLabel}";
                                         String mediaType = "videoOnly";
                                         String mediaKey = title+"${video!.videoOnlyList![index].container.name}"+"${video!.videoOnlyList[index].size.totalMegaBytes}"+mediaType;
-                                        String spec = "(${video!.videoOnlyList[index].qualityLabel},${video!.videoOnlyList[index].container.name},${video!.videoOnlyList[index].size.totalMegaBytes.toStringAsFixed(2)}MB)";
+                                        String spec = "(${video!.videoOnlyList[index].qualityLabel},${video!.videoOnlyList[index].container.name})";
                                         return Row(
                                           children: [
                                             Obx(() {
@@ -524,7 +566,7 @@ class _YoutubeScreenState extends State<YoutubeScreen>  with AutomaticKeepAliveC
                                         String title = "${video!.video!.title}_${video!.audioOnlyList![index].qualityLabel}";
                                         String mediaType = "audioOnly";
                                         String mediaKey = title+"${video!.audioOnlyList![index].container.name}"+"${video!.audioOnlyList[index].size.totalMegaBytes}"+mediaType;
-                                        String spec = "(${video!.audioOnlyList[index].qualityLabel},${video!.audioOnlyList[index].container.name},${video!.audioOnlyList[index].size.totalMegaBytes.toStringAsFixed(2)}MB)";
+                                        String spec = "(${video!.audioOnlyList[index].qualityLabel},${video!.audioOnlyList[index].container.name})";
                                         return Row(
                                           children: [
                                             Obx(() {
@@ -534,7 +576,7 @@ class _YoutubeScreenState extends State<YoutubeScreen>  with AutomaticKeepAliveC
                                                   if(_dataController.downloadingNow[mediaKey]==true){
                                                   }else{
                                                     try{
-                                                      await _dataController.downloadCommon(title: title!, streamInfo: video!.videoOnlyList![index], type: mediaType , mediaKey: mediaKey);
+                                                      await _dataController.downloadCommon(title: title!, streamInfo: video!.audioOnlyList![index], type: mediaType , mediaKey: mediaKey);
                                                       _dataController.openRootDir();
                                                     }catch(e){
                                                       logger.e(e);

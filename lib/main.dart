@@ -12,14 +12,14 @@ void main() async{
   WidgetsFlutterBinding.ensureInitialized();
   Get.put(DataController());
 
-  Get.put(DataController());
+
   final DataController dataController = Get.find<DataController>();
   await dataController.getPath();
-  Size size = await DesktopWindow.getWindowSize();
-  logger.i(size);
-
+  // Size size = await DesktopWindow.getWindowSize();
+  // logger.i(size);
+  //
   await DesktopWindow.setMinWindowSize(Size(700,600));
-  await DesktopWindow.setWindowSize(Size(size.width,size.height));
+  // await DesktopWindow.setWindowSize(Size(size.width,size.height));
   runApp(const MyApp());
 }
 
@@ -29,7 +29,7 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return GetMaterialApp(
 
       home: MainPage(),
     );

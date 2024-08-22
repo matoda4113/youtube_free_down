@@ -93,7 +93,9 @@ class _YoutubeScreenState extends State<YoutubeScreen>  with AutomaticKeepAliveC
 
                   });
                   try{
+                    logger.e(videoUrl);
                     video =  await _dataController.getYoutubeInfo(videoUrl!);
+                    logger.e("SD");
                     setState(() {
                       searchNow = false;
                       flickManager = FlickManager(

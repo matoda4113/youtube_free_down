@@ -156,21 +156,27 @@ class DataController extends GetxController {
 
 
 
+
     //제목공백제거
     String t1 = title.replaceAll(RegExp(r'\s+'), '');
+
     //공백및 안되는 문자 제거후 제목
-    String fixedTitle = t1.replaceAll(RegExp(r'[\/:*?"<>|\\]'), '_');
+    String t2 = t1.replaceAll(RegExp(r'[\/:*?"<>|\\]'), '_');
+    String fixedTitle = t2.replaceAll(RegExp(r"['|\\]"), '_');
+
     String videoFilePathTmp ="";
     String audioFilePathTmp ="";
     String mergeFilePath ='${appDocumentsDir!.path}/${fixedTitle}_mix.${streamInfoVideo.container.name}';
 
     try{
+
       // Completer 생성
       Completer<void> videoCompleter = Completer<void>();
       Completer<void> audioCompleter = Completer<void>();
       downloadingNow[mediaKeyVideo+"mix"] = true;
       //////비디오
       if (streamInfoVideo != null) {
+
 
         videoFilePathTmp = '${tempDir!.path}/${fixedTitle}_video.${streamInfoVideo.container.name}';
         Stream<List<int>> stream = yt.videos.streamsClient.get(streamInfoVideo);
@@ -204,6 +210,7 @@ class DataController extends GetxController {
           cancelOnError: true,
         );
       }
+
       //////오디오
       if (streamInfoAudio != null) {
         audioFilePathTmp = '${tempDir!.path}/${fixedTitle}_audio.${streamInfoAudio.container.name}';
@@ -236,11 +243,13 @@ class DataController extends GetxController {
         );
       }
 
+
       // 비디오와 오디오가 모두 완료될 때까지 대기
       await Future.wait([videoCompleter.future, audioCompleter.future]);
 
       ///////// 비디오와 오디오 합치기
       final command = '-y -i $videoFilePathTmp -i $audioFilePathTmp -c:v copy -c:a aac -strict experimental ${mergeFilePath}';
+
 
       double totalDurationSeconds = await getVideoDuration(videoFilePathTmp)??1000000.0;
       // 초기 진행률 설정
@@ -260,6 +269,7 @@ class DataController extends GetxController {
       });
 
       FFmpegSession session =  await FFmpegKit.execute(command);
+
       final returnCode = await session.getReturnCode();
 
       if (ReturnCode.isSuccess(returnCode)) {
@@ -270,6 +280,7 @@ class DataController extends GetxController {
       downloadingNow[mediaKeyVideo+"mix"] = false;
       return mergeFilePath;
     }catch(e){
+      logger.e(e);
       throw Exception(e);
     }
 
@@ -291,10 +302,16 @@ class DataController extends GetxController {
   void openRootDir() async{
 
     Process.run('open', ["${appDocumentsDir!.path}"]).then((ProcessResult results) {
+
+      logger.i(appDocumentsDir!.path);
     }).catchError((e) {
       logger.e('Error: $e');
     });
   }
+
+
+
+
 
 
   // 로그에서 추출한 시간을 초 단위로 변환

@@ -62,6 +62,7 @@ class _YoutubeScreenState extends State<YoutubeScreen>  with AutomaticKeepAliveC
               Text("Youtube Video Download"),
             ],
           ),
+
           Row(
             children: [
               Expanded(
@@ -93,9 +94,7 @@ class _YoutubeScreenState extends State<YoutubeScreen>  with AutomaticKeepAliveC
 
                   });
                   try{
-                    logger.e(videoUrl);
                     video =  await _dataController.getYoutubeInfo(videoUrl!);
-                    logger.e("SD");
                     setState(() {
                       searchNow = false;
                       flickManager = FlickManager(
@@ -354,6 +353,7 @@ class _YoutubeScreenState extends State<YoutubeScreen>  with AutomaticKeepAliveC
                           child: PageView(
                             controller: _pageController,
                             onPageChanged: (index) {
+
                               setState(() {
                                 _currentIndex = index;
                               });
@@ -362,6 +362,15 @@ class _YoutubeScreenState extends State<YoutubeScreen>  with AutomaticKeepAliveC
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
+                                  GestureDetector(
+
+                                      onTap: (){
+
+                                        logger.e(_currentIndex);
+                                        logger.e(_pageController.page);
+                                      },
+                                      child: Text("JsonLesson1")
+                                  ),
                                   SizedBox(height: 5,),
                                   Text("(*video+audio혼합)"),
                                   SizedBox(height: 5,),
@@ -485,6 +494,16 @@ class _YoutubeScreenState extends State<YoutubeScreen>  with AutomaticKeepAliveC
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
+
+                                 GestureDetector(
+
+                                           onTap: (){
+
+                                             logger.e(_currentIndex);
+                                             logger.e(_pageController.page);
+                                           },
+                                           child: Text("JsonLesson1")
+                                           ),
                                   SizedBox(height: 5,),
                                   Text("(*video only 음성없는 영상파일)"),
                                   SizedBox(height: 5,),

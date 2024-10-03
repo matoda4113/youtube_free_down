@@ -58,8 +58,6 @@ class DataController extends GetxController {
 
     YoutubeVideoInfoVo youtubeVideoInfoVo = YoutubeVideoInfoVo();
     String videoId = extractVideoId(url);
-    logger.i(videoId);
-
     try{
       //비디오 정보
       youtubeVideoInfoVo.video = await yt.videos.get(videoId);
@@ -78,9 +76,14 @@ class DataController extends GetxController {
         });
         //자막삽입
         youtubeVideoInfoVo.caption = tmpCaption;
+
       }
 
-      StreamManifest streamManifest = await yt.videos.streamsClient.getManifest(extractVideoId(videoId));
+
+
+      StreamManifest streamManifest = await yt.videos.streamsClient.getManifest(videoId);
+
+      logger.e(streamManifest);
       youtubeVideoInfoVo.mixList = streamManifest.muxed.toList(); // 혼합
       youtubeVideoInfoVo.videoOnlyList = streamManifest.videoOnly.toList(); // 비디오만
       youtubeVideoInfoVo.audioOnlyList = streamManifest.audioOnly.toList(); // 오디오만

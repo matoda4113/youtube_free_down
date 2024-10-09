@@ -61,10 +61,10 @@ class DataController extends GetxController {
     try{
       //비디오 정보
       youtubeVideoInfoVo.video = await yt.videos.get(videoId);
-
+      logger.w("비디오추출");
       //자막정보
       ClosedCaptionManifest? trackManifest = await yt.videos.closedCaptions.getManifest(videoId);
-
+      logger.w("자막추출");
 
       if(trackManifest !=null && trackManifest.tracks.isNotEmpty){
         List<ClosedCaptionTrackInfo>? tracks = trackManifest.tracks.where((element) => element.format.formatCode=='srv1').toList();
@@ -79,11 +79,11 @@ class DataController extends GetxController {
 
       }
 
+      logger.w("비디오아이디 ${videoId}");
 
+      StreamManifest streamManifest = await yt.videos.streamsClient.getManifest(videoId,fullManifest: true);
+      logger.w("비디오스트림메니페스트 추출");
 
-      StreamManifest streamManifest = await yt.videos.streamsClient.getManifest(videoId);
-
-      logger.e(streamManifest);
       youtubeVideoInfoVo.mixList = streamManifest.muxed.toList(); // 혼합
       youtubeVideoInfoVo.videoOnlyList = streamManifest.videoOnly.toList(); // 비디오만
       youtubeVideoInfoVo.audioOnlyList = streamManifest.audioOnly.toList(); // 오디오만

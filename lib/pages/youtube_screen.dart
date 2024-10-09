@@ -95,6 +95,8 @@ class _YoutubeScreenState extends State<YoutubeScreen>  with AutomaticKeepAliveC
                   });
                   try{
                     video =  await _dataController.getYoutubeInfo(videoUrl!);
+                    logger.e("화면에서 비디오받음");
+                    logger.e(video?.mixList);
                     setState(() {
                       searchNow = false;
                       flickManager = FlickManager(
@@ -105,6 +107,7 @@ class _YoutubeScreenState extends State<YoutubeScreen>  with AutomaticKeepAliveC
 
 
                   }catch(e){
+                    logger.e(e);
                     setState(() {
                       video = null;
                       searchNow = false;
